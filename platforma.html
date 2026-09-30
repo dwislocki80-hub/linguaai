@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinguaAI — platforma do nauki języków</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="brand"><span class="brand-mark">L</span> LinguaAI</div>
+    <button class="nav-btn active" data-view="dashboard">Panel</button>
+    <button class="nav-btn" data-view="kreator">Nowa lekcja</button>
+    <button class="nav-btn" data-view="nauka">Widok nauki</button>
+    <button class="nav-btn" data-view="quiz">Quiz</button>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <h1>Cześć, Damian 👋</h1>
+      <p class="subtitle">Oto Twój postęp i wygenerowane wcześniej lekcje.</p>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="statWords">0</div><div class="stat-label">Słówek w lekcjach</div></div>
+        <div class="stat-card"><div class="stat-num" id="statLessons">0</div><div class="stat-label">Lekcji</div></div>
+        <div class="stat-card"><div class="stat-num" id="statLevel">B1</div><div class="stat-label">Aktualny poziom</div></div>
+      </div>
+
+      <div class="new-lesson-cta">
+        <button class="btn" data-goto="kreator">+ Wygeneruj nową lekcję</button>
+      </div>
+
+      <div class="lesson-grid" id="lessonGrid"></div>
+    </section>
+
+    <!-- KREATOR ZESTAWÓW -->
+    <section class="view" id="view-kreator">
+      <h1>Nowa lekcja</h1>
+      <p class="subtitle">Wpisz temat, a AI przygotuje fiszki i quiz.</p>
+
+      <div class="wizard">
+        <div class="field">
+          <label for="topic">Temat lekcji</label>
+          <input id="topic" type="text" maxlength="100" placeholder="np. negocjacje biznesowe, wizyta u lekarza, gotowanie">
+          <div class="field-error" id="topicError" hidden>Wpisz temat (co najmniej 2 znaki).</div>
+          <div class="topic-chip-row">
+            <button type="button" class="chip">Rozmowa kwalifikacyjna w IT</button>
+            <button type="button" class="chip">Negocjacje biznesowe</button>
+            <button type="button" class="chip">Podróże i lotnisko</button>
+            <button type="button" class="chip">Motoryzacja</button>
+            <button type="button" class="chip">Wizyta u lekarza</button>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="lang">Język</label>
+            <select id="lang">
+              <option value="en" selected>angielski</option>
+              <option value="de">niemiecki</option>
+              <option value="es">hiszpański</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="level">Poziom (ESOKJ)</label>
+            <select id="level">
+              <option>A1</option><option>A2</option>
+              <option selected>B1</option><option>B2</option>
+              <option>C1</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="count">Liczba słówek</label>
+            <input id="count" type="number" value="10" min="5" max="20">
+          </div>
+        </div>
+
+        <div class="form-error" id="genError" hidden>
+          <p id="genErrorText"></p>
+          <button type="button" class="btn ghost" id="btnRetry">Spróbuj ponownie</button>
+        </div>
+
+        <div class="wizard-actions">
+          <button class="btn ghost" data-goto="dashboard">Anuluj</button>
+          <button class="btn" id="btnGenerate">Generuj lekcję →</button>
+        </div>
+      </div>
+      <p class="server-note" id="serverNote"></p>
+    </section>
+
+    <!-- WIDOK NAUKI: FISZKI -->
+    <section class="view" id="view-nauka">
+      <h1 id="flashTitle">Fiszki</h1>
+      <p class="subtitle" id="flashCounter"></p>
+
+      <!-- szkielet ładowania (rozdz. 3.3.2.1) -->
+      <div class="flash-wrap" id="flashSkeleton" hidden aria-live="polite">
+        <div class="progress-track"><div class="skeleton-bar"></div></div>
+        <div class="skeleton-card">
+          <div class="skeleton-line wide"></div>
+          <div class="skeleton-line"></div>
+        </div>
+        <p class="loading-text">AI przygotowuje fiszki na temat „<span id="loadingTopic"></span>”. To zwykle trwa kilka sekund.</p>
+      </div>
+
+      <div class="flash-wrap" id="flashContent">
+        <div class="progress-track"><div class="progress-fill" id="flashProgress"></div></div>
+
+        <div class="flip-card" id="flipCard" tabindex="0" role="button" aria-label="Odwróć fiszkę">
+          <div class="flip-inner">
+            <div class="flip-face front">
+              <div class="word-main" id="flashWord">—</div>
+              <div class="word-phon" id="flashPhon"></div>
+              <div class="hint">kliknij lub naciśnij spację, aby odwrócić</div>
+            </div>
+            <div class="flip-face back">
+              <div class="word-translation" id="flashTranslation">—</div>
+              <div class="word-example" id="flashExample"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flash-dots" id="flashDots"></div>
+
+        <div class="flash-actions">
+          <button class="btn ghost" id="flashPrev">← Poprzednia</button>
+          <button class="btn ghost" id="flashShuffle">Przetasuj</button>
+          <button class="btn" id="flashNext">Następna →</button>
+        </div>
+        <p class="kbd-hint">Skróty: ← → zmiana fiszki, spacja obrót</p>
+      </div>
+    </section>
+
+    <!-- QUIZ -->
+    <section class="view" id="view-quiz">
+      <h1 id="quizTitle">Sprawdź się</h1>
+      <p class="subtitle" id="quizProgress"></p>
+
+      <div id="quizPlay">
+        <div class="quiz-box">
+          <div class="quiz-q" id="quizQuestion">—</div>
+          <div id="quizOptions"></div>
+        </div>
+        <div class="quiz-nav">
+          <button class="btn ghost" id="quizPrev">← Poprzednie</button>
+          <button class="btn" id="quizNext">Następne →</button>
+        </div>
+      </div>
+
+      <div id="quizResult" class="quiz-box result-box" hidden>
+        <div class="result-score" id="resultScore">0 / 0</div>
+        <div class="result-percent" id="resultPercent">0%</div>
+        <p class="result-msg" id="resultMsg"></p>
+        <ul class="result-list" id="resultList"></ul>
+        <div class="quiz-nav">
+          <button class="btn ghost" id="quizRetry">Spróbuj ponownie</button>
+          <button class="btn" id="quizFinish">Wróć do panelu</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
